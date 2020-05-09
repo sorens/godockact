@@ -13,3 +13,12 @@
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
+
+# macOS files
+.DS_Store
+
+# build files
+build/
+
+# docker files
+docker/
