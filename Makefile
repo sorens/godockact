@@ -8,12 +8,6 @@ BUILD_DIR=build
 LINUX_DIR=linux
 MACOS_DIR=macos
 WIN_DIR=windows
-DOCKER=docker
-DOCKER_BUILD=$(DOCKER) build
-DOCKER_RUN=$(DOCKER) run
-DOCKER_OWNER=sorens
-DOCKER_REPO=godockaction
-DOCKER_IMAGE=hello
 
 all: build 
 build: mod pre-build cross
