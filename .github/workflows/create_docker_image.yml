@@ -1,0 +1,54 @@
+name: godockact
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+env:
+  IMAGE_NAME: hello
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+    - name: Setup Go environment
+      uses: actions/setup-go@v2.0.3
+      with:
+        go-version: 1.14.2
+
+    - name: Checkout
+      uses: actions/checkout@v2.1.0
+
+    - name: Github Tag Bump
+      uses: anothrNick/github-tag-action@1.22.0
+      id: bump
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        WITH_V: true
+
+    - name: Make build
+      run: make
+
+    - name: Build docker image
+      run: docker build . --file Dockerfile --tag image
+
+    - name: Auth to registry
+      run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+
+    - name: Push image
+      run: |
+          IMAGE_ID=docker.pkg.github.com/${{ github.repository }}/$IMAGE_NAME
+          # To lowercase the IMAGE_ID
+          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
+          echo IMAGE_ID=$IMAGE_ID
+        
+          NEW_TAG=${{ steps.bump.outputs.new_tag }}
+          NEW_TAG=$(echo $NEW_TAG | sed -e 's/^v//')
+          echo NEW_TAG=$NEW_TAG
+          
+          docker tag image $IMAGE_ID:$NEW_TAG
+          docker tag image $IMAGE_ID:latest
+          
+          docker push $IMAGE_ID:$NEW_TAG
+          docker push $IMAGE_ID:latest
